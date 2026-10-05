@@ -9,13 +9,15 @@ namespace Backrooms.Gameplay
     [RequireComponent(typeof(Light))]
     public sealed class FlickeringLight : MonoBehaviour
     {
-        [SerializeField] private float _baseIntensity = 1.2f;
-        [SerializeField] private float _flickerAmplitude = 0.35f;
-        [SerializeField] private float _flickerSpeed = 8f;
-        [SerializeField] private float _noiseScale = 0.7f;
+        [SerializeField] private float _baseIntensity = 3f;
+        [SerializeField] private float _minIntensity = 0.05f;
+        [SerializeField] private float _flickerSpeed = 12f;
+        [SerializeField, Range(0f, 1f)] private float _blackoutChance = 0.04f;
+        [SerializeField] private float _blackoutDuration = 0.08f;
 
         private Light _light;
         private float _seed;
+        private float _blackoutUntil;
 
         private void Awake()
         {
@@ -25,11 +27,24 @@ namespace Backrooms.Gameplay
 
         private void Update()
         {
-            float t = Time.time * _flickerSpeed + _seed;
-            float noise = Mathf.PerlinNoise(t, _seed);
-            float wobble = (noise - 0.5f) * 2f * _flickerAmplitude * _noiseScale;
-            float spike = Random.value > 0.97f ? -_flickerAmplitude * 1.5f : 0f;
-            _light.intensity = Mathf.Max(0f, _baseIntensity + wobble + spike);
+            if (Time.time < _blackoutUntil)
+            {
+                _light.intensity = _minIntensity;
+                return;
+            }
+
+            if (Random.value < _blackoutChance)
+            {
+                _blackoutUntil = Time.time + _blackoutDuration;
+                _light.intensity = _minIntensity;
+                return;
+            }
+
+            // Два слоя шума: медленный гул + быстрые вспышки
+            float slow = Mathf.PerlinNoise(Time.time * (_flickerSpeed * 0.35f) + _seed, _seed);
+            float fast = Mathf.PerlinNoise(_seed, Time.time * _flickerSpeed * 1.7f);
+            float mix = slow * 0.55f + fast * 0.45f;
+            _light.intensity = Mathf.Lerp(_minIntensity, _baseIntensity, mix);
         }
     }
 }

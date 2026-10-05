@@ -1,30 +1,35 @@
-# Day 0 checklist (open project in Unity Hub)
+# Чеклист дня 0 (открыть проект в Unity Hub)
 
-## Open
+## Открыть проект
 
 1. Unity Hub → Projects → Add → Add project from disk → `D:\HUH\backrooms`
-2. Open with **Unity 6.6 (6000.6.4f1)**
-3. If URP wizard appears: create a URP Asset and assign it (Edit → Project Settings → Graphics)
-4. External Script Editor: Rider (Edit → Preferences → External Tools)
+2. Открыть **Unity 6.6 (6000.6.4f1)**
+3. Если появится мастер URP: создай URP Asset и назначь его (Edit → Project Settings → Graphics)
+4. Внешний редактор скриптов: Rider (Edit → Preferences → External Tools)
 
-## Build a greybox room (15–20 min)
+## Собрать greybox-комнату (15–20 мин)
 
-1. Hierarchy → 3D Object → Plane (floor). Scale ~(2, 1, 2), colour yellowish
-2. Four Cubes as walls
-3. Cube as a short column
-4. Light → Point Light near ceiling; add component `FlickeringLight`
-5. Capsule as placeholder player (camera child looking forward)
-6. Press Play: light should flicker
+1. Hierarchy → 3D Object → Plane (пол). Scale примерно `(2, 1, 2)`, цвет желтоватый
+2. Четыре Cube — стены
+3. Cube — короткая колонна
+4. Light → Point Light у потолка; добавь компонент `FlickeringLight`
+5. Настройки света (важно, иначе мерцания не видно):
+   - Отключи или удали `Directional Light`
+   - Point Light Position Y ≈ `3`–`4` (не 16!)
+   - Light → Range ≈ `25`–`40`
+   - Color — жёлтый
+6. Capsule — заглушка игрока (камера — дочерний объект, смотрит вперёд)
+7. Нажми Play: свет должен заметно мигать и иногда гаснуть
 
-## Learn (say out loud)
+## Выучи вслух
 
-- GameObject = container; Component = behaviour (`Transform`, `Light`, `FlickeringLight`)
+- GameObject — контейнер; Component — поведение (`Transform`, `Light`, `FlickeringLight`)
 - `Awake` vs `Start` vs `Update`
-- `[SerializeField]` shows private fields in Inspector
-- Prefab: drag a lamp GameObject into `Assets/_Project/Prefabs`
+- `[SerializeField]` показывает приватные поля в Inspector
+- Prefab: перетащи лампу из Hierarchy в `Assets/_Project/Prefabs`
 
-## Done when
+## Готово, когда
 
-- [ ] Project opens without errors
-- [ ] Room exists, Play mode shows flickering light
-- [ ] You can explain `FlickeringLight` line by line
+- [ ] Проект открывается без ошибок
+- [ ] Комната есть, в Play мерцает свет
+- [ ] Можешь объяснить `FlickeringLight` построчно
