@@ -65,10 +65,8 @@ Thumbs.db
 /Assets/_Project/Docs/
 /Assets/_Project/Docs.meta
 
-# One-off local inspect scripts / scene backups
-tools/inspect_*.py
+# Local-only helpers / scene backups (tracked tools like gen_*.py stay)
+tools/fix_*.py
 /Backups/
 /Assets/_Project/_Backups/
 /Assets/_Project/_Backups.meta
-
-/tools/
