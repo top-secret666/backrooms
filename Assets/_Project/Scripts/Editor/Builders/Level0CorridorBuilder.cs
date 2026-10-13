@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Rendering;
 using Backrooms.Gameplay;
 
 namespace Backrooms.EditorTools
@@ -16,18 +15,51 @@ namespace Backrooms.EditorTools
         private const string RootName = "Level0_Corridor";
         private const float CorridorWidth = 4f;
         private const float WallHeight = 3.2f;
-        private const float WallThickness = 0.2f;
+        private const float WallThickness = 0.45f;
         private const float MainLength = 24f;
         private const float SpurLength = 12f;
         private const float CeilingY = 3.2f;
         private const float LightY = 3.05f;
 
+        // User sections — NEVER destroy these (manual geometry).
+        private static readonly string[] ProtectedRoots =
+        {
+            "HELL",
+            "Hell",
+            "Level0_Corridor_Hell",
+            "Level0_Corridor (3)",
+        };
+
         [MenuItem("Backrooms/Build Kane-Style T-Corridor")]
         public static void Build()
         {
-            var old = GameObject.Find(RootName);
-            if (old != null)
-                Object.DestroyImmediate(old);
+            // Safety: if a corridor already exists, do NOT wipe the scene.
+            // Manual pieces (HELL / duplicates) are never destroyed.
+            var existing = GameObject.Find(RootName);
+            if (existing != null)
+            {
+                bool rebuild = EditorUtility.DisplayDialog(
+                    "Backrooms — corridor already exists",
+                    "Level0_Corridor already in the scene.\n\n" +
+                    "Rebuild will DELETE only 'Level0_Corridor' and recreate it.\n" +
+                    "Objects named HELL / custom duplicates are kept.\n\n" +
+                    "Save the scene (Ctrl+S) before rebuilding.",
+                    "Rebuild Level0_Corridor only",
+                    "Cancel");
+                if (!rebuild)
+                    return;
+
+                Object.DestroyImmediate(existing);
+            }
+
+            foreach (string protectedName in ProtectedRoots)
+            {
+                // Just log — never destroy
+                if (GameObject.Find(protectedName) != null)
+                    Debug.Log($"[Backrooms] Protected user section kept: {protectedName}");
+            }
+
+            HideLegacyGreybox();
 
             var root = new GameObject(RootName);
 
@@ -118,9 +150,46 @@ namespace Backrooms.EditorTools
                     light.enabled = false;
             }
 
+            // Place player at corridor start if present
+            var player = GameObject.Find("Player");
+            if (player != null)
+            {
+                Undo.RecordObject(player.transform, "Move Player to corridor");
+                player.transform.position = new Vector3(0f, 1f, 0f);
+                player.transform.rotation = Quaternion.identity;
+            }
+
             Selection.activeGameObject = root;
             Undo.RegisterCreatedObjectUndo(root, "Build Kane-Style T-Corridor");
-            Debug.Log("[Backrooms] T-corridor built. Hide/disable old Plane/Cubes/Ceiling if they overlap. Move Player to (0, 1, 0).");
+            Debug.Log("[Backrooms] Kane T-corridor ready. Play and walk the hall + north spur. Esc unlocks cursor; click Game to relock.");
+        }
+
+        [MenuItem("Backrooms/Hide Legacy Greybox Room")]
+        public static void HideLegacyGreybox()
+        {
+            string[] names =
+            {
+                "Plane", "Ceiling", "Cube", "Cube (1)", "Cube (2)", "Cube (3)", "Point Light"
+            };
+
+            int hidden = 0;
+            foreach (string name in names)
+            {
+                var go = GameObject.Find(name);
+                if (go == null)
+                    continue;
+                // Don't hide lights that live under the corridor
+                if (go.transform.root != null && go.transform.root.name == RootName)
+                    continue;
+                if (go.name == "Point Light" && go.transform.parent != null)
+                    continue;
+
+                Undo.RecordObject(go, "Hide legacy greybox");
+                go.SetActive(false);
+                hidden++;
+            }
+
+            Debug.Log($"[Backrooms] Legacy greybox objects hidden: {hidden}");
         }
 
         private static void PlaceLightsAlongX(Transform parent, float length, float z)
@@ -169,23 +238,40 @@ namespace Backrooms.EditorTools
 
             var light = lightGo.AddComponent<Light>();
             light.type = LightType.Point;
-            light.range = 8f;
-            light.intensity = 2.0f;
-            light.color = new Color(1f, 0.92f, 0.65f); // warm fluorescent
+            light.range = 7.5f;
+            light.intensity = 1.9f;
+            light.color = new Color(1f, 0.93f, 0.68f); // warm fluorescent (Kane)
             light.shadows = LightShadows.Soft;
 
             var flicker = lightGo.AddComponent<FlickeringLight>();
-            // Defaults from script are fine; seeds differ per instance via Awake
+            // Editor: push Kane-tuned values into private SerializeFields
+            var so = new SerializedObject(flicker);
+            so.FindProperty("_baseIntensity").floatValue = 1.9f;
+            so.FindProperty("_minIntensity").floatValue = 1.45f;
+            so.FindProperty("_flickerSpeed").floatValue = 0.9f;
+            so.FindProperty("_rareDipChance").floatValue = 0.004f;
+            so.FindProperty("_rareDipDuration").floatValue = 0.1f;
+            so.FindProperty("_rareDipIntensity").floatValue = 0.55f;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static void MakeWall(Transform parent, string name, Vector3 pos, Vector3 scale, Material mat)
+        private static void MakeWall(Transform parent, string name, Vector3 pos, Vector3 size, Material mat)
         {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            go.name = name;
+            // Корень: scale 1 + BoxCollider.size в мировых метрах
+            // (CharacterController плохо дружит с сильно растянутыми кубами).
+            var go = new GameObject(name);
             go.transform.SetParent(parent, false);
             go.transform.position = pos;
-            go.transform.localScale = scale;
-            ApplyMat(go, mat);
+            go.transform.localScale = Vector3.one;
+            var box = go.AddComponent<BoxCollider>();
+            box.size = size;
+
+            var visual = new GameObject("Visual");
+            visual.transform.SetParent(go.transform, false);
+            visual.AddComponent<MeshFilter>();
+            visual.AddComponent<MeshRenderer>();
+            WallMeshUtility.ApplyUvMeshToVisual(visual.transform, size, metersPerTile: 2.5f);
+            ApplyMat(visual, mat);
         }
 
         private static void MakeFloor(Transform parent, string name, Vector3 pos, Vector3 scale, Material mat)
