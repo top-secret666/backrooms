@@ -70,3 +70,5 @@ tools/inspect_*.py
 /Backups/
 /Assets/_Project/_Backups/
 /Assets/_Project/_Backups.meta
+
+/tools/
