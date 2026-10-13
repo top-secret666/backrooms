@@ -59,3 +59,14 @@ sysinfo.txt
 # OS
 .DS_Store
 Thumbs.db
+
+# Personal notes (keep local, not in public repo)
+/docs/
+/Assets/_Project/Docs/
+/Assets/_Project/Docs.meta
+
+# One-off local inspect scripts / scene backups
+/tools/inspect_*.py
+/Backups/
+/Assets/_Project/_Backups/
+/Assets/_Project/_Backups.meta

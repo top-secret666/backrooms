@@ -2,7 +2,7 @@
 
 First-person horror set in **Level 0** of the Backrooms: yellow corridors, buzzing fluorescents, damp carpet — inspired by Kane Pixels.
 
-![Level 0 greybox — dim fluorescents and fog](docs/images/level0-greybox.png)
+![Level 0 greybox — dim fluorescents and fog](media/level0-greybox.png)
 
 Goal (full game): find the exit in 10–15 minutes without being caught.
 
@@ -17,11 +17,7 @@ Goal (full game): find the exit in 10–15 minutes without being caught.
 - Player **flashlight** (`F`) — Spot + near fill, settings in `FlashlightConfig`
 - Editor tools under **Backrooms/** (corridor/hell builders, FIX Lights, atmosphere)
 
-Study / interview notes: [`Assets/_Project/Docs/THEORY_AND_INTERVIEW.md`](Assets/_Project/Docs/THEORY_AND_INTERVIEW.md)
-
 Next (not done yet): procedural maze, entity AI on `NoiseListener`, Input Actions asset, UI/HUD, WebGL build.
-
-See also [docs/GDD.md](docs/GDD.md) and [docs/day-kane-corridor.md](docs/day-kane-corridor.md).
 
 ## Tech
 
